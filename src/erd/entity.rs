@@ -45,11 +45,10 @@ impl Entity {
 // ==================================================================
 // Attribute struct and implementation
 // ==================================================================
-#[derive(Debug)]
 pub struct Attribute {
     pub attr_type: String,
     pub name: String,
-    pub constraints: KeyConstraints,
+    pub key: KeyConstraints,
     pub comment: Option<String>,
 }
 impl Attribute {
@@ -57,28 +56,29 @@ impl Attribute {
         Attribute {
             attr_type: attr_type.to_string(),
             name: name.to_string(),
-            constraints: KeyConstraints::default(),
+            key: KeyConstraints::default(),
             comment: None,
         }
     }
 
+    //
     pub fn with_comment(mut self, comment: &str) -> Self {
         self.comment = Some(comment.to_string());
         self
     }
 
     pub fn as_primary_key(mut self) -> Self {
-        self.constraints.is_primary = true;
+        self.key.is_primary = true;
         self
     }
 
     pub fn as_foreign_key(mut self) -> Self {
-        self.constraints.is_foreign = true;
+        self.key.is_foreign = true;
         self
     }
 
     pub fn as_unique(mut self) -> Self {
-        self.constraints.is_unique = true;
+        self.key.is_unique = true;
         self
     }
 }
@@ -86,7 +86,6 @@ impl Attribute {
 // ==================================================================
 // KeyConstraints struct and implementation
 // ==================================================================
-#[derive(Debug)]
 pub struct KeyConstraints {
     pub is_primary: bool,
     pub is_foreign: bool,
@@ -159,7 +158,7 @@ mod tests {
     mod attribute_tests {
         use super::*;
         #[test]
-        fn test_create_without_alias_or_attributes() {
+        fn test_create_without_comment_or_key_constraints() {
             // arrange
             let attr_type: &str = "string";
             let attr_name: &str = "product_id";
@@ -168,6 +167,43 @@ mod tests {
             // assert
             assert_eq!(attr.attr_type, attr_type);
             assert_eq!(attr.name, attr_name);
+            assert_eq!(attr.key.is_primary, false);
+            assert_eq!(attr.key.is_foreign, false);
+            assert_eq!(attr.key.is_unique, false);
+        }
+
+        #[test]
+        fn test_create_as_primary_key() {
+            // act
+            let attr = Attribute::new("string", "product_id").as_primary_key();
+            // assert
+            assert_eq!(attr.key.is_primary, true);
+        }
+
+        #[test]
+        fn test_create_as_foreign_key() {
+            // act
+            let attr = Attribute::new("string", "product_id").as_foreign_key();
+            // assert
+            assert_eq!(attr.key.is_foreign, true);
+        }
+
+        #[test]
+        fn test_create_as_unique() {
+            // act
+            let attr = Attribute::new("string", "product_id").as_unique();
+            // assert
+            assert_eq!(attr.key.is_unique, true);
+        }
+
+        #[test]
+        fn test_create_with_comment() {
+            // arrange
+            let comment = "Unique identifier for the product";
+            // act
+            let attr = Attribute::new("string", "product_id").with_comment(comment);
+            // assert
+            assert_eq!(attr.comment, Some(comment.to_string()));
         }
     }
 }
