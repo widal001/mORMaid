@@ -1,3 +1,4 @@
+#[derive(PartialEq, Debug)]
 pub enum Cardinality {
     ZeroOrOne,
     ExactlyOne,
@@ -13,9 +14,9 @@ pub enum Cardinality {
 /// # use crate::mormaid::erd::relationship;
 ///
 /// let album_to_song = relationship::Relationship::new(
-///     String::from("ALBUM"),
+///     "ALBUM",
+///     "SONG",
 ///     relationship::Cardinality::ExactlyOne,
-///     String::from("SONG"),
 ///     relationship::Cardinality::ZeroOrMore,
 /// )
 ///     .as_non_identifying()
@@ -23,8 +24,8 @@ pub enum Cardinality {
 /// ```
 pub struct Relationship {
     // The id
-    pub left_id: String,
-    pub right_id: String,
+    pub left_id: super::EntityId,
+    pub right_id: super::EntityId,
     pub left_cardinality: Cardinality,
     pub right_cardinality: Cardinality,
     pub is_identifying: bool,
@@ -40,14 +41,14 @@ impl Relationship {
     /// To create a non-identifying relationship, use [Relationship::as_non_identifying].
     /// To add a label, use [Relationship::with_label].
     pub fn new(
-        left_id: String,
+        left_id: &str,
+        right_id: &str,
         left_cardinality: Cardinality,
-        right_id: String,
         right_cardinality: Cardinality,
     ) -> Self {
         Relationship {
-            left_id,
-            right_id,
+            left_id: super::EntityId::from(left_id),
+            right_id: super::EntityId::from(right_id),
             left_cardinality,
             right_cardinality,
             is_identifying: true,
@@ -69,5 +70,34 @@ impl Relationship {
     pub fn with_label(mut self, label: &str) -> Self {
         self.label = Some(label.to_string());
         return self;
+    }
+}
+
+// =========================
+// EntityId tests
+// =========================
+#[cfg(test)]
+mod tests {
+
+    use super::super::*;
+    use super::*;
+
+    const ALBUM_ID: &str = "PRODUCT";
+    const SONG_ID: &str = "PRODUCT";
+
+    #[test]
+    fn test_that_entity_ids_with_same_string_are_equal() {
+        // act
+        let relationship = Relationship::new(
+            ALBUM_ID,
+            SONG_ID,
+            Cardinality::ExactlyOne,
+            Cardinality::OneOrMore,
+        );
+        // assert
+        assert_eq!(relationship.left_id, EntityId::from(ALBUM_ID));
+        assert_eq!(relationship.right_id, EntityId::from(SONG_ID));
+        assert_eq!(relationship.left_cardinality, Cardinality::ExactlyOne);
+        assert_eq!(relationship.right_cardinality, Cardinality::OneOrMore);
     }
 }

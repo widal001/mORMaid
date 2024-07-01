@@ -1,6 +1,7 @@
 // ==================================================================
 // Entity struct and implementation
 // ==================================================================
+
 pub struct Entity {
     /// The id for the entity in the ERD.
     ///
