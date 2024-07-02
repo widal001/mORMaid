@@ -1,7 +1,11 @@
 use std::collections::HashMap;
+use std::fmt;
+
+use utils::Indent;
 
 pub mod entity;
 pub mod relationship;
+pub mod utils;
 
 // ==================================================================
 // EntityId struct and implementation
@@ -40,6 +44,21 @@ impl ERD {
             entities: HashMap::new(),
             relationships: Vec::new(),
         }
+    }
+}
+// implement the Display trait
+impl fmt::Display for ERD {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // initialize the erDiagram
+        let mut erd_str = "erDiagram".to_string();
+        // append entities if the ERD has them
+        if self.entities.len() > 0 {
+            // add each entity to new, indented line
+            for entity in self.entities.values() {
+                erd_str += &format!("\n{}", entity.to_string().indent(4));
+            }
+        }
+        write!(f, "{}", erd_str)
     }
 }
 
@@ -205,6 +224,42 @@ mod tests {
             // assert
             assert_eq!(erd.relationships.len(), 1);
             assert_eq!(erd.entities.len(), 2);
+        }
+
+        #[test]
+        fn display_empty_diagram() {
+            // arrange
+            let wanted = "erDiagram";
+            let erd = ERD::new();
+            // act
+            let got = erd.to_string();
+            // assert
+            assert_eq!(got, wanted)
+        }
+
+        #[test]
+        fn display_erd_with_entities_and_their_attributes() {
+            // arrange
+            let attr_type = "string";
+            let erd = ERD::new()
+                .with_entity(
+                    entity::Entity::new(ALBUM_ID)
+                        .add_attribute(entity::Attribute::new(attr_type, "foo"))
+                        .add_attribute(entity::Attribute::new(attr_type, "bar")),
+                )
+                .with_entity(entity::Entity::new(SONG_ID));
+            let album_wanted = concat!(
+                "    ALBUM {\n",
+                "        string foo\n",
+                "        string bar\n",
+                "    }",
+            );
+            let song_wanted = "SONG";
+            // act
+            let got = erd.to_string();
+            // assert
+            assert!(got.contains(album_wanted));
+            assert!(got.contains(song_wanted));
         }
     }
 }

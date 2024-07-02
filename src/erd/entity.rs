@@ -53,6 +53,17 @@ impl fmt::Display for Entity {
         if let Some(alias) = self.alias.as_deref() {
             entity_str += &format!("[\"{}\"]", alias);
         }
+        // format the attributes if they exist
+        if self.attributes.len() > 0 {
+            // append an opening bracket on the same line as the entity id
+            entity_str += " {";
+            // append each attribute to a new, indented line
+            for attr in &self.attributes {
+                entity_str += &format!("\n    {}", attr.to_string())
+            }
+            // append a final closing bracket on its own line
+            entity_str += "\n}";
+        }
         write!(f, "{}", entity_str)
     }
 }
@@ -104,13 +115,13 @@ impl Attribute {
 
 impl fmt::Display for Attribute {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // format the required fields
+        // format the attribute type and name
         let mut attr_str = format!("{} {}", self.attr_type, self.name);
-        // optionally add key constraints
+        // format key constraints if any exist
         if self.has_constraints() {
             attr_str += &format!(" {}", self.key);
         }
-        // optionally add comment
+        // format the comment if one exists
         if let Some(comment) = self.comment.as_deref() {
             attr_str += &format!(" \"{}\"", comment);
         }
@@ -246,7 +257,27 @@ mod tests {
         fn test_display_with_alias() {
             // arrange
             let entity = Entity::new(ENTITY_ID).with_alias(ALIAS);
-            let wanted = format!("ALBUM[\"album_table\"]");
+            let wanted = "ALBUM[\"album_table\"]";
+            // act
+            let got = entity.to_string();
+            // assert
+            assert_eq!(got, wanted);
+        }
+
+        #[test]
+        fn test_display_with_multiple_attributes() {
+            // arrange
+            let attr_type = "integer";
+            let attr_name = "album_id";
+            let entity = Entity::new(ENTITY_ID)
+                .add_attribute(Attribute::new(attr_type, attr_name))
+                .add_attribute(Attribute::new(ATTR_TYPE, ATTR_NAME));
+            let wanted = concat!(
+                "ALBUM {\n",
+                "    integer album_id\n",
+                "    string title\n",
+                "}"
+            );
             // act
             let got = entity.to_string();
             // assert
