@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 use std::fmt;
 
-use utils::Indent;
-
 pub mod entity;
 pub mod relationship;
 pub mod utils;
@@ -46,17 +44,21 @@ impl ERD {
         }
     }
 }
+
 // implement the Display trait
 impl fmt::Display for ERD {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // initialize the erDiagram
         let mut erd_str = "erDiagram".to_string();
+
         // append entities if the ERD has them
         if self.entities.len() > 0 {
-            // add each entity to new, indented line
-            for entity in self.entities.values() {
-                erd_str += &format!("\n{}", entity.to_string().indent(4));
-            }
+            erd_str = utils::append_items(erd_str, self.entities.values(), "Entities", 4)
+        }
+
+        // append relationships if the ERD has them
+        if self.relationships.len() > 0 {
+            erd_str = utils::append_items(erd_str, &self.relationships, "Relationships", 4)
         }
         write!(f, "{}", erd_str)
     }
@@ -260,6 +262,35 @@ mod tests {
             // assert
             assert!(got.contains(album_wanted));
             assert!(got.contains(song_wanted));
+        }
+
+        #[test]
+        fn display_erd_with_relationships() {
+            // arrange
+            let artist_id = "ARTIST";
+            let erd = ERD::new()
+                .with_relationship(relationship::Relationship::new(
+                    ALBUM_ID,
+                    SONG_ID,
+                    relationship::Cardinality::ExactlyOne,
+                    relationship::Cardinality::OneOrMore,
+                ))
+                .with_relationship(
+                    relationship::Relationship::new(
+                        artist_id,
+                        ALBUM_ID,
+                        relationship::Cardinality::OneOrMore,
+                        relationship::Cardinality::OneOrMore,
+                    )
+                    .as_non_identifying(),
+                );
+            let album_song = "ALBUM ||--|{ SONG\n";
+            let artist_album = "ARTIST }|..|{ ALBUM";
+            // act
+            let got = erd.to_string();
+            // assert
+            assert!(got.contains(album_song));
+            assert!(got.contains(artist_album));
         }
     }
 }
