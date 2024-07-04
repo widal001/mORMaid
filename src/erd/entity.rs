@@ -2,6 +2,8 @@
 // Entity struct and implementation
 // ==================================================================
 
+use std::fmt;
+
 pub struct Entity {
     /// The id for the entity in the ERD.
     ///
@@ -40,6 +42,29 @@ impl Entity {
     pub fn add_attribute(mut self, attribute: Attribute) -> Self {
         self.attributes.push(attribute);
         self
+    }
+}
+
+impl fmt::Display for Entity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // format entity id
+        let mut entity_str = format!("{}", self.id);
+        // format the alias if it exists
+        if let Some(alias) = self.alias.as_deref() {
+            entity_str += &format!("[\"{}\"]", alias);
+        }
+        // format the attributes if they exist
+        if self.attributes.len() > 0 {
+            // append an opening bracket on the same line as the entity id
+            entity_str += " {";
+            // append each attribute to a new, indented line
+            for attr in &self.attributes {
+                entity_str += &format!("\n    {}", attr.to_string())
+            }
+            // append a final closing bracket on its own line
+            entity_str += "\n}";
+        }
+        write!(f, "{}", entity_str)
     }
 }
 
@@ -82,11 +107,59 @@ impl Attribute {
         self.key.is_unique = true;
         self
     }
+
+    pub fn has_constraints(&self) -> bool {
+        self.key.is_primary || self.key.is_foreign || self.key.is_unique
+    }
+}
+
+impl fmt::Display for Attribute {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // format the attribute type and name
+        let mut attr_str = format!("{} {}", self.attr_type, self.name);
+        // format key constraints if any exist
+        if self.has_constraints() {
+            attr_str += &format!(" {}", self.key);
+        }
+        // format the comment if one exists
+        if let Some(comment) = self.comment.as_deref() {
+            attr_str += &format!(" \"{}\"", comment);
+        }
+        write!(f, "{}", attr_str)
+    }
 }
 
 // ==================================================================
 // KeyConstraints struct and implementation
 // ==================================================================
+
+#[derive(Debug)]
+enum ConstraintCombo {
+    None,
+    PrimaryKey,
+    ForeignKey,
+    UniqueKey,
+    PrimaryForeignKey,
+    PrimaryUniqueKey,
+    ForeignUniqueKey,
+    PrimaryForeignUniqueKey,
+}
+
+impl ConstraintCombo {
+    fn from_bools(is_primary: bool, is_foreign: bool, is_unique: bool) -> Self {
+        match (is_primary, is_foreign, is_unique) {
+            (false, false, false) => ConstraintCombo::None,
+            (true, false, false) => ConstraintCombo::PrimaryKey,
+            (false, true, false) => ConstraintCombo::ForeignKey,
+            (false, false, true) => ConstraintCombo::UniqueKey,
+            (true, true, false) => ConstraintCombo::PrimaryForeignKey,
+            (true, false, true) => ConstraintCombo::PrimaryUniqueKey,
+            (false, true, true) => ConstraintCombo::ForeignUniqueKey,
+            (true, true, true) => ConstraintCombo::PrimaryForeignUniqueKey,
+        }
+    }
+}
+
 pub struct KeyConstraints {
     pub is_primary: bool,
     pub is_foreign: bool,
@@ -100,6 +173,28 @@ impl KeyConstraints {
             is_unique: false,
         }
     }
+
+    fn to_combo(&self) -> ConstraintCombo {
+        ConstraintCombo::from_bools(self.is_primary, self.is_foreign, self.is_unique)
+    }
+}
+
+impl fmt::Display for KeyConstraints {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // format the required fields
+        let key_str = match self.to_combo() {
+            ConstraintCombo::None => "",
+            ConstraintCombo::PrimaryKey => "PK",
+            ConstraintCombo::ForeignKey => "FK",
+            ConstraintCombo::UniqueKey => "UK",
+            ConstraintCombo::PrimaryForeignKey => "PK, FK",
+            ConstraintCombo::PrimaryUniqueKey => "PK, UK",
+            ConstraintCombo::ForeignUniqueKey => "FK, UK",
+            ConstraintCombo::PrimaryForeignUniqueKey => "PK, FK, UK",
+        };
+        // optionally add key constraints
+        write!(f, "{}", key_str)
+    }
 }
 
 // ==================================================================
@@ -110,7 +205,10 @@ impl KeyConstraints {
 mod tests {
     use super::*;
 
-    const ENTITY_ID: &str = "PRODUCT";
+    const ENTITY_ID: &str = "ALBUM";
+    const ALIAS: &str = "album_table";
+    const ATTR_NAME: &str = "title";
+    const ATTR_TYPE: &str = "string";
 
     // =========================
     // Entity tests
@@ -129,27 +227,61 @@ mod tests {
 
         #[test]
         fn test_create_with_alias() {
-            // arrange
-            let alias = "product_table";
             // act
-            let entity = Entity::new(ENTITY_ID).with_alias(alias);
+            let entity = Entity::new(ENTITY_ID).with_alias(ALIAS);
             // assert
-            assert_eq!(entity.alias, Some(alias.to_string()));
+            assert_eq!(entity.alias, Some(ALIAS.to_string()));
         }
 
         #[test]
         fn test_add_attribute() {
-            // arrange
-            let alias = "product_table";
-            let attr_type = "string";
-            let attr_name = "product_id";
             // act
-            let entity = Entity::new(ENTITY_ID)
-                .with_alias(alias)
-                .add_attribute(Attribute::new(attr_type, attr_name));
+            let entity = Entity::new(ENTITY_ID).add_attribute(Attribute::new(ATTR_TYPE, ATTR_NAME));
             // assert
             assert_eq!(entity.attributes.len(), 1); // entity has one attribute
-            assert_eq!(entity.attributes[0].name, attr_name); // attr name matches
+            assert_eq!(entity.attributes[0].name, ATTR_NAME); // attr name matches
+        }
+
+        #[test]
+        fn test_display_without_attributes_or_alias() {
+            // arrange
+            let entity = Entity::new(ENTITY_ID);
+            let wanted = ENTITY_ID;
+            // act
+            let got = entity.to_string();
+            // assert
+            assert_eq!(got, wanted);
+        }
+
+        #[test]
+        fn test_display_with_alias() {
+            // arrange
+            let entity = Entity::new(ENTITY_ID).with_alias(ALIAS);
+            let wanted = "ALBUM[\"album_table\"]";
+            // act
+            let got = entity.to_string();
+            // assert
+            assert_eq!(got, wanted);
+        }
+
+        #[test]
+        fn test_display_with_multiple_attributes() {
+            // arrange
+            let attr_type = "integer";
+            let attr_name = "album_id";
+            let entity = Entity::new(ENTITY_ID)
+                .add_attribute(Attribute::new(attr_type, attr_name))
+                .add_attribute(Attribute::new(ATTR_TYPE, ATTR_NAME));
+            let wanted = concat!(
+                "ALBUM {\n",
+                "    integer album_id\n",
+                "    string title\n",
+                "}"
+            );
+            // act
+            let got = entity.to_string();
+            // assert
+            assert_eq!(got, wanted);
         }
     }
 
@@ -160,14 +292,11 @@ mod tests {
         use super::*;
         #[test]
         fn test_create_without_comment_or_key_constraints() {
-            // arrange
-            let attr_type: &str = "string";
-            let attr_name: &str = "product_id";
             // act
-            let attr = Attribute::new(attr_type, attr_name);
+            let attr = Attribute::new(ATTR_TYPE, ATTR_NAME);
             // assert
-            assert_eq!(attr.attr_type, attr_type);
-            assert_eq!(attr.name, attr_name);
+            assert_eq!(attr.attr_type, ATTR_TYPE);
+            assert_eq!(attr.name, ATTR_NAME);
             assert_eq!(attr.key.is_primary, false);
             assert_eq!(attr.key.is_foreign, false);
             assert_eq!(attr.key.is_unique, false);
@@ -176,7 +305,7 @@ mod tests {
         #[test]
         fn test_create_as_primary_key() {
             // act
-            let attr = Attribute::new("string", "product_id").as_primary_key();
+            let attr = Attribute::new(ATTR_TYPE, ATTR_NAME).as_primary_key();
             // assert
             assert_eq!(attr.key.is_primary, true);
         }
@@ -184,7 +313,7 @@ mod tests {
         #[test]
         fn test_create_as_foreign_key() {
             // act
-            let attr = Attribute::new("string", "product_id").as_foreign_key();
+            let attr = Attribute::new(ATTR_TYPE, ATTR_NAME).as_foreign_key();
             // assert
             assert_eq!(attr.key.is_foreign, true);
         }
@@ -192,7 +321,7 @@ mod tests {
         #[test]
         fn test_create_as_unique() {
             // act
-            let attr = Attribute::new("string", "product_id").as_unique();
+            let attr = Attribute::new(ATTR_TYPE, ATTR_NAME).as_unique();
             // assert
             assert_eq!(attr.key.is_unique, true);
         }
@@ -202,9 +331,57 @@ mod tests {
             // arrange
             let comment = "Unique identifier for the product";
             // act
-            let attr = Attribute::new("string", "product_id").with_comment(comment);
+            let attr = Attribute::new(ATTR_TYPE, ATTR_NAME).with_comment(comment);
             // assert
             assert_eq!(attr.comment, Some(comment.to_string()));
+        }
+
+        #[test]
+        fn test_display_without_key_or_comment() {
+            // arrange
+            let wanted = format!("{ATTR_TYPE} {ATTR_NAME}");
+            let attr = Attribute::new(ATTR_TYPE, ATTR_NAME);
+            // act
+            let got = attr.to_string();
+            // assert
+            assert_eq!(got, wanted)
+        }
+
+        #[test]
+        fn test_display_with_one_key_constraint() {
+            // arrange
+            let wanted = format!("{ATTR_TYPE} {ATTR_NAME} PK");
+            let attr = Attribute::new(ATTR_TYPE, ATTR_NAME).as_primary_key();
+            // act
+            let got = attr.to_string();
+            // assert
+            assert_eq!(got, wanted)
+        }
+
+        #[test]
+        fn test_display_with_multiple_key_constraints() {
+            // arrange
+            let wanted = format!("{ATTR_TYPE} {ATTR_NAME} PK, FK, UK");
+            let attr = Attribute::new(ATTR_TYPE, ATTR_NAME)
+                .as_primary_key()
+                .as_foreign_key()
+                .as_unique();
+            // act
+            let got = attr.to_string();
+            // assert
+            assert_eq!(got, wanted)
+        }
+
+        #[test]
+        fn test_display_with_comment() {
+            // arrange
+            let comment = "comment about album";
+            let wanted = format!("{ATTR_TYPE} {ATTR_NAME} \"{comment}\"");
+            let attr = Attribute::new(ATTR_TYPE, ATTR_NAME).with_comment(comment);
+            // act
+            let got = attr.to_string();
+            // assert
+            assert_eq!(got, wanted)
         }
     }
 }
