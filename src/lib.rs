@@ -1,3 +1,6 @@
+#![warn(clippy::pedantic)]
+#![warn(clippy::style)]
+#![warn(clippy::perf)]
 pub mod erd;
 
 #[cfg(test)]
