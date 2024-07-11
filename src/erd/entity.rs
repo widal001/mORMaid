@@ -299,9 +299,9 @@ mod tests {
             // assert
             assert_eq!(attr.attr_type, ATTR_TYPE);
             assert_eq!(attr.name, ATTR_NAME);
-            assert_eq!(attr.key.is_primary, false);
-            assert_eq!(attr.key.is_foreign, false);
-            assert_eq!(attr.key.is_unique, false);
+            assert!(!attr.key.is_primary);
+            assert!(!attr.key.is_foreign);
+            assert!(!attr.key.is_unique);
         }
 
         #[test]
@@ -309,7 +309,7 @@ mod tests {
             // act
             let attr = Attribute::new(ATTR_TYPE, ATTR_NAME).as_primary_key();
             // assert
-            assert_eq!(attr.key.is_primary, true);
+            assert!(attr.key.is_primary);
         }
 
         #[test]
@@ -317,7 +317,7 @@ mod tests {
             // act
             let attr = Attribute::new(ATTR_TYPE, ATTR_NAME).as_foreign_key();
             // assert
-            assert_eq!(attr.key.is_foreign, true);
+            assert!(attr.key.is_foreign);
         }
 
         #[test]
@@ -325,7 +325,7 @@ mod tests {
             // act
             let attr = Attribute::new(ATTR_TYPE, ATTR_NAME).as_unique();
             // assert
-            assert_eq!(attr.key.is_unique, true);
+            assert!(attr.key.is_unique);
         }
 
         #[test]
