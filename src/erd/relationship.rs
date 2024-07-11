@@ -14,6 +14,7 @@ enum Direction {
 
 impl Cardinality {
     // Combines Cardinality and Direction to format the relationship join symbol
+    #[allow(clippy::match_same_arms)]
     fn fmt_with_direction(&self, dir: Direction) -> String {
         match (self, dir) {
             // formatting left_cardinality
@@ -52,6 +53,7 @@ impl std::fmt::Display for Cardinality {
 ///     .as_non_identifying()
 ///     .with_label("has");
 /// ```
+#[must_use]
 pub struct Relationship {
     // The id
     pub left_id: super::EntityId,
@@ -68,8 +70,8 @@ impl Relationship {
     /// # Note
     /// Relationships are identifying by default, meaning they are
     /// represented with a solid slide. They also have no label by default.
-    /// To create a non-identifying relationship, use [Relationship::as_non_identifying].
-    /// To add a label, use [Relationship::with_label].
+    /// To create a non-identifying relationship, use [`Relationship::as_non_identifying()`].
+    /// To add a label, use [`Relationship::with_label()`].
     pub fn new(
         left_id: &str,
         right_id: &str,
@@ -93,13 +95,13 @@ impl Relationship {
     /// [the mermaid documentation](https://mermaid.js.org/syntax/entityRelationshipDiagram.html#identification)
     pub fn as_non_identifying(mut self) -> Self {
         self.is_identifying = false;
-        return self;
+        self
     }
 
     /// Add a label to the relationship.
     pub fn with_label(mut self, label: &str) -> Self {
         self.label = Some(label.to_string());
-        return self;
+        self
     }
 }
 
@@ -124,9 +126,9 @@ impl fmt::Display for Relationship {
         };
         // append the label if the relationship has one
         if let Some(label) = self.label.as_deref() {
-            relationship_str += &format!(" : \"{}\"", label);
+            relationship_str += &format!(" : \"{label}\"");
         }
-        write!(f, "{}", relationship_str)
+        write!(f, "{relationship_str}")
     }
 }
 

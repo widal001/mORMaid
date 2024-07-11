@@ -4,6 +4,7 @@
 
 use std::fmt;
 
+#[must_use]
 pub struct Entity {
     /// The id for the entity in the ERD.
     ///
@@ -32,7 +33,7 @@ impl Entity {
         }
     }
 
-    /// Chain with Entity::new() to create an entity with an alias
+    /// Chain with `Entity::new()` to create an entity with an alias
     pub fn with_alias(mut self, alias: &str) -> Self {
         self.alias = Some(alias.to_string());
         self
@@ -48,29 +49,30 @@ impl Entity {
 impl fmt::Display for Entity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // format entity id
-        let mut entity_str = format!("{}", self.id);
+        let mut entity_str = self.id.to_string();
         // format the alias if it exists
         if let Some(alias) = self.alias.as_deref() {
-            entity_str += &format!("[\"{}\"]", alias);
+            entity_str += &format!("[\"{alias}\"]");
         }
         // format the attributes if they exist
-        if self.attributes.len() > 0 {
+        if !self.attributes.is_empty() {
             // append an opening bracket on the same line as the entity id
             entity_str += " {";
             // append each attribute to a new, indented line
             for attr in &self.attributes {
-                entity_str += &format!("\n    {}", attr.to_string())
+                entity_str += &format!("\n    {attr}");
             }
             // append a final closing bracket on its own line
             entity_str += "\n}";
         }
-        write!(f, "{}", entity_str)
+        write!(f, "{entity_str}")
     }
 }
 
 // ==================================================================
 // Attribute struct and implementation
 // ==================================================================
+#[must_use]
 pub struct Attribute {
     pub attr_type: String,
     pub name: String,
@@ -87,7 +89,6 @@ impl Attribute {
         }
     }
 
-    //
     pub fn with_comment(mut self, comment: &str) -> Self {
         self.comment = Some(comment.to_string());
         self
@@ -108,6 +109,7 @@ impl Attribute {
         self
     }
 
+    #[must_use]
     pub fn has_constraints(&self) -> bool {
         self.key.is_primary || self.key.is_foreign || self.key.is_unique
     }
@@ -123,16 +125,16 @@ impl fmt::Display for Attribute {
         }
         // format the comment if one exists
         if let Some(comment) = self.comment.as_deref() {
-            attr_str += &format!(" \"{}\"", comment);
+            attr_str += &format!(" \"{comment}\"");
         }
-        write!(f, "{}", attr_str)
+        write!(f, "{attr_str}")
     }
 }
 
 // ==================================================================
 // KeyConstraints struct and implementation
 // ==================================================================
-
+#[must_use]
 #[derive(Debug)]
 enum ConstraintCombo {
     None,
@@ -193,7 +195,7 @@ impl fmt::Display for KeyConstraints {
             ConstraintCombo::PrimaryForeignUniqueKey => "PK, FK, UK",
         };
         // optionally add key constraints
-        write!(f, "{}", key_str)
+        write!(f, "{key_str}")
     }
 }
 

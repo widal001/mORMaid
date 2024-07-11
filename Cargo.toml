@@ -1,6 +1,4 @@
 [package]
+edition = "2021"
 name = "mormaid"
 version = "0.1.0"
-edition = "2021"
-
-[dependencies]

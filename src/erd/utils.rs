@@ -8,7 +8,7 @@ impl Indent for str {
     fn indent(&self, size: usize) -> String {
         let indentation = " ".repeat(size);
         self.lines()
-            .map(|line| format!("{}{}", indentation, line))
+            .map(|line| format!("{indentation}{line}"))
             .collect::<Vec<_>>()
             .join("\n")
     }
@@ -26,7 +26,7 @@ where
     I: fmt::Display,
 {
     curr_str += &format!("\n{}%% {} start", " ".repeat(indent), note);
-    for item in items.into_iter() {
+    for item in items {
         curr_str += &format!("\n{}", &item.to_string().indent(indent));
     }
     curr_str += &format!("\n{}%% {} end", " ".repeat(indent), note);

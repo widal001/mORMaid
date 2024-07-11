@@ -9,6 +9,7 @@ pub mod utils;
 // EntityId struct and implementation
 // ==================================================================
 
+#[must_use]
 #[derive(Hash, Eq, PartialEq, Clone, Debug)]
 pub struct EntityId(String);
 
@@ -17,6 +18,7 @@ impl EntityId {
         EntityId(s)
     }
 
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -30,6 +32,8 @@ impl From<&str> for EntityId {
 // ================================================================
 // ERD struct and implementation
 // ================================================================
+#[must_use]
+#[derive(Default)]
 pub struct ERD {
     pub title: Option<String>,
     pub entities: HashMap<EntityId, entity::Entity>,
@@ -52,15 +56,15 @@ impl fmt::Display for ERD {
         let mut erd_str = "erDiagram".to_string();
 
         // append entities if the ERD has them
-        if self.entities.len() > 0 {
-            erd_str = utils::append_items(erd_str, self.entities.values(), "Entities", 4)
+        if !self.entities.is_empty() {
+            erd_str = utils::append_items(erd_str, self.entities.values(), "Entities", 4);
         }
 
         // append relationships if the ERD has them
-        if self.relationships.len() > 0 {
-            erd_str = utils::append_items(erd_str, &self.relationships, "Relationships", 4)
+        if !self.relationships.is_empty() {
+            erd_str = utils::append_items(erd_str, &self.relationships, "Relationships", 4);
         }
-        write!(f, "{}", erd_str)
+        write!(f, "{erd_str}")
     }
 }
 
@@ -74,13 +78,14 @@ impl ERD {
         self.entities.insert(id, entity);
     }
 
-    /// Add an entity to the ERD on creation by chaining with [ERD::new()].
+    /// Add an entity to the ERD on creation by chaining with [`ERD::new()`].
     pub fn with_entity(mut self, entity: entity::Entity) -> Self {
         self.add_entity(entity);
         self
     }
 
     /// Try to find an entity in the ERD using its id.
+    #[must_use]
     pub fn get_entity_by_id(&self, id: &EntityId) -> Option<&entity::Entity> {
         self.entities.get(id)
     }
@@ -109,7 +114,7 @@ impl ERD {
         self.relationships.push(relationship);
     }
 
-    /// Add a relationship to the ERD on creation by chaining with [ERD::new()].
+    /// Add a relationship to the ERD on creation by chaining with [`ERD::new()`].
     pub fn with_relationship(mut self, relationship: relationship::Relationship) -> Self {
         self.add_relationship(relationship);
         self
