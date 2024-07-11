@@ -1,4 +1,10 @@
 [package]
+categories = ["visualization", "value-formatting"]
+description = "Use an ORM-style syntax to programmatically generate valid mermaid diagrams."
 edition = "2021"
+keywords = ["mermaid", "mmd"]
+license = "MIT"
 name = "mormaid"
+readme = "README.md"
+repository = "https://github.com/widal001/mORMaid"
 version = "0.1.0"
