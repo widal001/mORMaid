@@ -346,7 +346,7 @@ mod tests {
             // act
             let got = attr.to_string();
             // assert
-            assert_eq!(got, wanted)
+            assert_eq!(got, wanted);
         }
 
         #[test]
@@ -357,7 +357,7 @@ mod tests {
             // act
             let got = attr.to_string();
             // assert
-            assert_eq!(got, wanted)
+            assert_eq!(got, wanted);
         }
 
         #[test]
@@ -371,7 +371,7 @@ mod tests {
             // act
             let got = attr.to_string();
             // assert
-            assert_eq!(got, wanted)
+            assert_eq!(got, wanted);
         }
 
         #[test]
@@ -383,7 +383,7 @@ mod tests {
             // act
             let got = attr.to_string();
             // assert
-            assert_eq!(got, wanted)
+            assert_eq!(got, wanted);
         }
     }
 }

@@ -196,7 +196,7 @@ mod tests {
             // assert
             assert_eq!(erd.relationships.len(), 1);
             let entity_count_new = erd.entities.len();
-            assert_eq!(entity_count_new, entity_count_old)
+            assert_eq!(entity_count_new, entity_count_old);
         }
 
         #[test]
@@ -241,7 +241,7 @@ mod tests {
             // act
             let got = erd.to_string();
             // assert
-            assert_eq!(got, wanted)
+            assert_eq!(got, wanted);
         }
 
         #[test]
