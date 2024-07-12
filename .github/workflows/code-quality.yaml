@@ -1,0 +1,25 @@
+name: CI - Rust
+on: pull_request
+
+jobs:
+  code-quality-checks:
+    runs-on: ubuntu-latest
+    steps:
+      # Set up the Rust and checkout the codebase
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Compile
+        run: cargo check
+
+      - name: Format
+        run: cargo fmt -- --check
+
+      - name: Lint
+        run: cargo clippy --all-targets --all-features
+
+      - name: Test
+        run: cargo test
+
+      - name: Docs
+        run: cargo doc --no-deps
