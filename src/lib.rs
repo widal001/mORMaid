@@ -29,8 +29,8 @@ mod tests {
 
         // create a relationship between previously created entities
         let album_songs = Relationship::new(
-            &album_table.id.as_str(),
-            &song_table.id.as_str(),
+            album_table.id.as_str(),
+            song_table.id.as_str(),
             Cardinality::ExactlyOne,
             Cardinality::OneOrMore,
         )
@@ -39,7 +39,7 @@ mod tests {
         // create a relationship between an existing entity and a new entity
         // that will be automatically created on insertion
         let album_artists = Relationship::new(
-            &album_table.id.as_str(),
+            album_table.id.as_str(),
             "ARTIST",
             Cardinality::OneOrMore,
             Cardinality::OneOrMore,
