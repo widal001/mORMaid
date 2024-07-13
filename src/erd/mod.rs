@@ -3,7 +3,10 @@ use std::fmt;
 
 pub mod entity;
 pub mod relationship;
-pub mod utils;
+mod utils;
+
+pub use entity::{Attribute, Entity};
+pub use relationship::{Cardinality, Relationship};
 
 // ==================================================================
 // EntityId struct and implementation
@@ -36,8 +39,8 @@ impl From<&str> for EntityId {
 #[derive(Default)]
 pub struct ERD {
     pub title: Option<String>,
-    pub entities: HashMap<EntityId, entity::Entity>,
-    pub relationships: Vec<relationship::Relationship>,
+    pub entities: HashMap<EntityId, Entity>,
+    pub relationships: Vec<Relationship>,
 }
 impl ERD {
     pub fn new() -> Self {
@@ -73,27 +76,27 @@ impl fmt::Display for ERD {
 // ========================================
 impl ERD {
     /// Add an entity to `ERD.entities`, keyed by the entity's id.
-    pub fn add_entity(&mut self, entity: entity::Entity) {
+    pub fn add_entity(&mut self, entity: Entity) {
         let id = EntityId::from(entity.id.as_str());
         self.entities.insert(id, entity);
     }
 
     /// Add an entity to the ERD on creation by chaining with [`ERD::new()`].
-    pub fn with_entity(mut self, entity: entity::Entity) -> Self {
+    pub fn with_entity(mut self, entity: Entity) -> Self {
         self.add_entity(entity);
         self
     }
 
     /// Try to find an entity in the ERD using its id.
     #[must_use]
-    pub fn get_entity_by_id(&self, id: &EntityId) -> Option<&entity::Entity> {
+    pub fn get_entity_by_id(&self, id: &EntityId) -> Option<&Entity> {
         self.entities.get(id)
     }
 
     /// If a entity doesn't exist in the ERD, create and insert it.
     pub fn create_entity_if_missing(&mut self, id: &EntityId) {
         if self.get_entity_by_id(id).is_none() {
-            self.add_entity(entity::Entity::new(id.as_str()));
+            self.add_entity(Entity::new(id.as_str()));
         }
     }
 }
@@ -106,7 +109,7 @@ impl ERD {
     ///
     /// This method also creates and adds the entities referenced in the relationship
     /// if they don't already exist in `ERD.entities`.
-    pub fn add_relationship(&mut self, relationship: relationship::Relationship) {
+    pub fn add_relationship(&mut self, relationship: Relationship) {
         // Ensure that both the left and right entities exist in the ERD
         self.create_entity_if_missing(&relationship.left_id);
         self.create_entity_if_missing(&relationship.right_id);
@@ -115,7 +118,7 @@ impl ERD {
     }
 
     /// Add a relationship to the ERD on creation by chaining with [`ERD::new()`].
-    pub fn with_relationship(mut self, relationship: relationship::Relationship) -> Self {
+    pub fn with_relationship(mut self, relationship: Relationship) -> Self {
         self.add_relationship(relationship);
         self
     }
@@ -154,8 +157,8 @@ mod tests {
             // arrange
             let mut erd = ERD::new();
             // act
-            erd.add_entity(entity::Entity::new(ALBUM_ID));
-            erd.add_entity(entity::Entity::new(SONG_ID));
+            erd.add_entity(Entity::new(ALBUM_ID));
+            erd.add_entity(Entity::new(SONG_ID));
             // assert
             assert_eq!(erd.entities.len(), 2);
             let product = erd.get_entity_by_id(&EntityId::from(ALBUM_ID));
@@ -168,8 +171,8 @@ mod tests {
         fn create_erd_with_entities() {
             // act
             let erd = ERD::new()
-                .with_entity(entity::Entity::new(ALBUM_ID))
-                .with_entity(entity::Entity::new(SONG_ID));
+                .with_entity(Entity::new(ALBUM_ID))
+                .with_entity(Entity::new(SONG_ID));
             // assert
             assert_eq!(erd.entities.len(), 2);
             let album = erd.get_entity_by_id(&EntityId::from(ALBUM_ID));
@@ -182,16 +185,16 @@ mod tests {
         fn add_relationship_for_existing_entities() {
             // arrange
             let mut erd = ERD::new()
-                .with_entity(entity::Entity::new(ALBUM_ID))
-                .with_entity(entity::Entity::new(SONG_ID));
+                .with_entity(Entity::new(ALBUM_ID))
+                .with_entity(Entity::new(SONG_ID));
             let entity_count_old = erd.entities.len();
             assert_eq!(entity_count_old, 2);
             // act
-            erd.add_relationship(relationship::Relationship::new(
+            erd.add_relationship(Relationship::new(
                 ALBUM_ID,
                 SONG_ID,
-                relationship::Cardinality::ExactlyOne,
-                relationship::Cardinality::OneOrMore,
+                Cardinality::ExactlyOne,
+                Cardinality::OneOrMore,
             ));
             // assert
             assert_eq!(erd.relationships.len(), 1);
@@ -207,11 +210,11 @@ mod tests {
             let entity_count_old = erd.entities.len();
             assert_eq!(entity_count_old, 0);
             // act
-            erd.add_relationship(relationship::Relationship::new(
+            erd.add_relationship(Relationship::new(
                 ALBUM_ID,
                 SONG_ID,
-                relationship::Cardinality::ExactlyOne,
-                relationship::Cardinality::OneOrMore,
+                Cardinality::ExactlyOne,
+                Cardinality::OneOrMore,
             ));
             // assert
             assert_eq!(erd.relationships.len(), 1);
@@ -222,11 +225,11 @@ mod tests {
         #[test]
         fn create_erd_with_relationship() {
             // act
-            let erd = ERD::new().with_relationship(relationship::Relationship::new(
+            let erd = ERD::new().with_relationship(Relationship::new(
                 ALBUM_ID,
                 SONG_ID,
-                relationship::Cardinality::ExactlyOne,
-                relationship::Cardinality::OneOrMore,
+                Cardinality::ExactlyOne,
+                Cardinality::OneOrMore,
             ));
             // assert
             assert_eq!(erd.relationships.len(), 1);
@@ -250,11 +253,11 @@ mod tests {
             let attr_type = "string";
             let erd = ERD::new()
                 .with_entity(
-                    entity::Entity::new(ALBUM_ID)
-                        .add_attribute(entity::Attribute::new(attr_type, "foo"))
-                        .add_attribute(entity::Attribute::new(attr_type, "bar")),
+                    Entity::new(ALBUM_ID)
+                        .with_attribute(Attribute::new(attr_type, "foo"))
+                        .with_attribute(Attribute::new(attr_type, "bar")),
                 )
-                .with_entity(entity::Entity::new(SONG_ID));
+                .with_entity(Entity::new(SONG_ID));
             let album_wanted = concat!(
                 "    ALBUM {\n",
                 "        string foo\n",
@@ -274,22 +277,22 @@ mod tests {
             // arrange
             let artist_id = "ARTIST";
             let erd = ERD::new()
-                .with_relationship(relationship::Relationship::new(
+                .with_relationship(Relationship::new(
                     ALBUM_ID,
                     SONG_ID,
-                    relationship::Cardinality::ExactlyOne,
-                    relationship::Cardinality::OneOrMore,
+                    Cardinality::ExactlyOne,
+                    Cardinality::OneOrMore,
                 ))
                 .with_relationship(
-                    relationship::Relationship::new(
+                    Relationship::new(
                         artist_id,
                         ALBUM_ID,
-                        relationship::Cardinality::OneOrMore,
-                        relationship::Cardinality::OneOrMore,
+                        Cardinality::OneOrMore,
+                        Cardinality::OneOrMore,
                     )
                     .as_non_identifying(),
                 );
-            let album_song = "ALBUM ||--|{ SONG\n";
+            let album_song = "ALBUM ||--|{ SONG : \"\"\n";
             let artist_album = "ARTIST }|..|{ ALBUM";
             // act
             let got = erd.to_string();

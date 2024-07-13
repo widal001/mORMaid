@@ -40,7 +40,7 @@ impl Entity {
     }
 
     /// Add an attribute to an entity
-    pub fn add_attribute(mut self, attribute: Attribute) -> Self {
+    pub fn with_attribute(mut self, attribute: Attribute) -> Self {
         self.attributes.push(attribute);
         self
     }
@@ -236,9 +236,10 @@ mod tests {
         }
 
         #[test]
-        fn test_add_attribute() {
+        fn test_with_attribute() {
             // act
-            let entity = Entity::new(ENTITY_ID).add_attribute(Attribute::new(ATTR_TYPE, ATTR_NAME));
+            let entity =
+                Entity::new(ENTITY_ID).with_attribute(Attribute::new(ATTR_TYPE, ATTR_NAME));
             // assert
             assert_eq!(entity.attributes.len(), 1); // entity has one attribute
             assert_eq!(entity.attributes[0].name, ATTR_NAME); // attr name matches
@@ -272,8 +273,8 @@ mod tests {
             let attr_type = "integer";
             let attr_name = "album_id";
             let entity = Entity::new(ENTITY_ID)
-                .add_attribute(Attribute::new(attr_type, attr_name))
-                .add_attribute(Attribute::new(ATTR_TYPE, ATTR_NAME));
+                .with_attribute(Attribute::new(attr_type, attr_name))
+                .with_attribute(Attribute::new(ATTR_TYPE, ATTR_NAME));
             let wanted = concat!(
                 "ALBUM {\n",
                 "    integer album_id\n",
