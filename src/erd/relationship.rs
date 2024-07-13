@@ -61,7 +61,7 @@ pub struct Relationship {
     pub left_cardinality: Cardinality,
     pub right_cardinality: Cardinality,
     pub is_identifying: bool,
-    pub label: Option<String>,
+    pub label: String,
 }
 
 impl Relationship {
@@ -84,7 +84,7 @@ impl Relationship {
             left_cardinality,
             right_cardinality,
             is_identifying: true,
-            label: None,
+            label: String::new(),
         }
     }
 
@@ -100,7 +100,7 @@ impl Relationship {
 
     /// Add a label to the relationship.
     pub fn with_label(mut self, label: &str) -> Self {
-        self.label = Some(label.to_string());
+        self.label = label.to_string();
         self
     }
 }
@@ -111,23 +111,21 @@ impl fmt::Display for Relationship {
         let left_str = format!(
             "{} {}",
             self.left_id.as_str(),
-            self.left_cardinality.fmt_with_direction(Direction::Left)
+            self.left_cardinality.fmt_with_direction(Direction::Left),
         );
+        // also add the label to the right end
         let right_str = format!(
-            "{} {}",
+            "{} {} : \"{}\"",
             self.right_cardinality.fmt_with_direction(Direction::Right),
-            self.right_id.as_str()
+            self.right_id.as_str(),
+            self.label
         );
         // format the relationship as a solid or dashed line
-        let mut relationship_str = if self.is_identifying {
+        let relationship_str = if self.is_identifying {
             format!("{left_str}--{right_str}") // solid line
         } else {
             format!("{left_str}..{right_str}") // dashed line
         };
-        // append the label if the relationship has one
-        if let Some(label) = self.label.as_deref() {
-            relationship_str += &format!(" : \"{label}\"");
-        }
         write!(f, "{relationship_str}")
     }
 }
@@ -169,7 +167,7 @@ mod tests {
             Cardinality::ZeroOrOne,
             Cardinality::ZeroOrMore,
         );
-        let wanted = "ALBUM |o--o{ SONG";
+        let wanted = "ALBUM |o--o{ SONG : \"\"";
         // act
         let got = relationship.to_string();
         // assert
