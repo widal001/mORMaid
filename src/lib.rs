@@ -11,13 +11,14 @@ mod tests {
     #[test]
     fn it_works() {
         // create Entities with attributes and other details
-        let album_table = Entity::new("PRODUCT")
-            .with_alias("product")
+        let album_table = Entity::new("ALBUM")
+            .with_alias("album")
             .with_attribute(Attribute::new("int", "albumId").as_primary_key())
             .with_attribute(Attribute::new("str", "title"));
 
+        // such as foreign key constraints and comments
         let song_table = Entity::new("SONG")
-            .with_alias("product")
+            .with_alias("song")
             .with_attribute(Attribute::new("int", "songId").as_primary_key())
             .with_attribute(Attribute::new("int", "albumId").as_foreign_key())
             .with_attribute(Attribute::new("int", "title"))
@@ -28,8 +29,8 @@ mod tests {
 
         // create a relationship between previously created entities
         let album_songs = Relationship::new(
-            album_table.id.as_str(),
-            song_table.id.as_str(),
+            &album_table.id.as_str(),
+            &song_table.id.as_str(),
             Cardinality::ExactlyOne,
             Cardinality::OneOrMore,
         )
@@ -38,13 +39,15 @@ mod tests {
         // create a relationship between an existing entity and a new entity
         // that will be automatically created on insertion
         let album_artists = Relationship::new(
-            album_table.id.as_str(),
+            &album_table.id.as_str(),
             "ARTIST",
             Cardinality::OneOrMore,
             Cardinality::OneOrMore,
         )
         .as_non_identifying();
 
+        // create the diagram and insert the entities and relationships
+        // note that the "ARTIST" entity will be created with the relationship
         let diagram = ERD::new()
             .with_entity(album_table)
             .with_entity(song_table)

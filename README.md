@@ -9,13 +9,13 @@ use mormaid::erd::{Attribute, Cardinality, Entity, Relationship, ERD};
 
 // create Entities with attributes and other details
 let album_table = Entity::new("ALBUM")
-    .with_alias("album table")
+    .with_alias("album")
     .with_attribute(Attribute::new("int", "albumId").as_primary_key())
     .with_attribute(Attribute::new("str", "title"));
 
 // such as foreign key constraints and comments
 let song_table = Entity::new("SONG")
-    .with_alias("song table")
+    .with_alias("song")
     .with_attribute(Attribute::new("int", "songId").as_primary_key())
     .with_attribute(Attribute::new("int", "albumId").as_foreign_key())
     .with_attribute(Attribute::new("int", "title"))
