@@ -6,11 +6,7 @@ pub mod erd;
 
 #[cfg(test)]
 mod tests {
-    use crate::erd::{
-        entity::{Attribute, Entity},
-        relationship::{Cardinality, Relationship},
-        ERD,
-    };
+    use crate::erd::{Attribute, Cardinality, Entity, Relationship, ERD};
 
     #[test]
     fn it_works() {

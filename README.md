@@ -5,11 +5,7 @@
 ## Quick start
 
 ```rust
-use mormaid::erd::{
-    entity::{Attribute, Entity},
-    relationship::{Cardinality, Relationship},
-    ERD,
-};
+use mormaid::erd::{Attribute, Cardinality, Entity, Relationship, ERD};
 
 // create Entities with attributes and other details
 let album_table = Entity::new("ALBUM")
