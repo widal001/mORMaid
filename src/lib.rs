@@ -2,7 +2,10 @@
 #![warn(clippy::style)]
 #![warn(clippy::perf)]
 #![warn(clippy::cargo)]
+
 pub mod erd;
+pub mod requirement;
+mod utils;
 
 #[cfg(test)]
 mod tests {

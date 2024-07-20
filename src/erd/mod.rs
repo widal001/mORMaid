@@ -3,8 +3,8 @@ use std::fmt;
 
 pub mod entity;
 pub mod relationship;
-mod utils;
 
+use crate::utils;
 pub use entity::{Attribute, Entity};
 pub use relationship::{Cardinality, Relationship};
 
