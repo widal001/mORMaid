@@ -4,7 +4,7 @@
 #![warn(clippy::cargo)]
 
 pub mod erd;
-pub mod requirement;
+pub mod req;
 mod utils;
 
 #[cfg(test)]

@@ -3,6 +3,7 @@ use std::fmt;
 // ==================================================================
 // Enums
 // ==================================================================
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq)]
 pub enum RequirementType {
     Default,
@@ -69,6 +70,7 @@ impl fmt::Display for VerifyMethod {
 // Requirement struct and implementation
 // ==================================================================
 
+#[must_use]
 pub struct Requirement {
     pub kind: RequirementType,
     pub name: String,

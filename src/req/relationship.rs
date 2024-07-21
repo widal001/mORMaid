@@ -1,4 +1,6 @@
 use std::fmt;
+
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq)]
 pub enum RelationshipType {
     Contains,
@@ -45,12 +47,7 @@ impl Relationship {
 
 impl fmt::Display for Relationship {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let out_str = format!(
-            "{} - {} -> {}",
-            self.source,
-            self.kind.to_string(),
-            self.target,
-        );
+        let out_str = format!("{} - {} -> {}", self.source, self.kind, self.target,);
         write!(f, "{out_str}")
     }
 }
