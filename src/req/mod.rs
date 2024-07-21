@@ -1,9 +1,11 @@
 use std::collections::HashMap;
+use std::fmt;
 
 pub mod element;
 pub mod relationship;
 pub mod requirement;
 
+use crate::utils;
 pub use element::Element;
 pub use relationship::{Relationship, RelationshipType};
 pub use requirement::{Requirement, RequirementType, Risk, VerifyMethod};
@@ -44,6 +46,30 @@ impl RequirementDiagram {
     #[must_use]
     pub fn get_element_by_name(&self, name: &str) -> Option<&Element> {
         self.elements.get(name)
+    }
+}
+
+// implement the Display trait
+impl fmt::Display for RequirementDiagram {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // initialize the erDiagram
+        let mut out_str = "requirementDiagram".to_string();
+
+        // append elements if the diagram has them
+        if !self.elements.is_empty() {
+            out_str = utils::append_items(out_str, self.elements.values(), "Elements", 4);
+        }
+
+        // append requirements if the diagram has them
+        if !self.requirements.is_empty() {
+            out_str = utils::append_items(out_str, self.requirements.values(), "Requirements", 4);
+        }
+
+        // append relationships if the diagram has them
+        if !self.relationships.is_empty() {
+            out_str = utils::append_items(out_str, &self.relationships, "Relationships", 4);
+        }
+        write!(f, "{out_str}")
     }
 }
 
@@ -111,99 +137,178 @@ mod test {
 
     use super::*;
 
-    const ELEMENT_NAME: &str = "element";
+    const ELEMENT_NAME: &str = "foo";
     const ELEMENT_KIND: &str = "brief";
     const REQ_ID: &str = "1.1.1";
     const REQ_NAME: &str = "milestone";
     const REQ_KIND: RequirementType = RequirementType::Default;
 
-    #[test]
-    fn create_empty_diagram() {
-        // act
-        let got = RequirementDiagram::new();
-        // assert
-        assert!(got.requirements.is_empty());
-        assert!(got.elements.is_empty());
-        assert!(got.relationships.is_empty());
+    mod creation_tests {
+
+        use super::*;
+
+        #[test]
+        fn create_empty_diagram() {
+            // act
+            let got = RequirementDiagram::new();
+            // assert
+            assert!(got.requirements.is_empty());
+            assert!(got.elements.is_empty());
+            assert!(got.relationships.is_empty());
+        }
+
+        #[test]
+        fn add_element_to_existing_diagram() {
+            // arrange
+            let mut diagram = RequirementDiagram::new();
+            // act
+            diagram.add_element(Element::new(ELEMENT_NAME, ELEMENT_KIND));
+            // assert
+            let element = diagram
+                .get_element_by_name(ELEMENT_NAME)
+                .expect("Expected element but got None");
+            assert_eq!(element.name, ELEMENT_NAME);
+        }
+
+        #[test]
+        fn create_diagram_with_element() {
+            // act
+            let diagram =
+                RequirementDiagram::new().with_element(Element::new(ELEMENT_NAME, ELEMENT_KIND));
+            // assert
+            let element = diagram
+                .get_element_by_name(ELEMENT_NAME)
+                .expect("Expected element but got None");
+            assert_eq!(element.name, ELEMENT_NAME);
+        }
+
+        #[test]
+        fn add_requirement_to_existing_diagram() {
+            // arrange
+            let mut diagram = RequirementDiagram::new();
+            // act
+            diagram.add_requirement(Requirement::new(REQ_KIND, REQ_NAME, REQ_ID));
+            // assert
+            let requirement = diagram
+                .get_requirement_by_name(REQ_NAME)
+                .expect("Expected requirement but got None");
+            assert_eq!(requirement.name, REQ_NAME);
+        }
+
+        #[test]
+        fn create_diagram_with_requirement() {
+            // act
+            let diagram = RequirementDiagram::new()
+                .with_requirement(Requirement::new(REQ_KIND, REQ_NAME, REQ_ID));
+            // assert
+            let requirement = diagram
+                .get_requirement_by_name(REQ_NAME)
+                .expect("Expected requirement but got None");
+            assert_eq!(requirement.name, REQ_NAME);
+        }
+
+        #[test]
+        fn add_valid_relationship_to_existing_diagram() {
+            // arrange
+            let mut diagram = RequirementDiagram::new()
+                .with_element(Element::new(ELEMENT_NAME, ELEMENT_KIND))
+                .with_requirement(Requirement::new(REQ_KIND, REQ_NAME, REQ_ID));
+            // act
+            println!("{:?}", diagram.elements.keys());
+            diagram.add_relationship(Relationship::new(
+                ELEMENT_NAME,
+                REQ_NAME,
+                RelationshipType::Satisfies,
+            ));
+            // assert
+            assert_eq!(diagram.relationships.len(), 1);
+        }
+
+        #[test]
+        #[should_panic = "Fake isn't found in the list of elements or requirements"]
+        fn add_invalid_relationship_should_panic() {
+            // arrange
+            let mut diagram = RequirementDiagram::new();
+            // act
+            diagram.add_relationship(Relationship::new(
+                "Fake",
+                "bar",
+                RelationshipType::Satisfies,
+            ));
+        }
     }
 
-    #[test]
-    fn add_element_to_existing_diagram() {
-        // arrange
-        let mut diagram = RequirementDiagram::new();
-        // act
-        diagram.add_element(Element::new(ELEMENT_NAME, ELEMENT_KIND));
-        // assert
-        let element = diagram
-            .get_element_by_name(ELEMENT_NAME)
-            .expect("Expected element but got None");
-        assert_eq!(element.name, ELEMENT_NAME);
-    }
+    mod display_tests {
+        use super::*;
 
-    #[test]
-    fn create_diagram_with_element() {
-        // act
-        let diagram =
-            RequirementDiagram::new().with_element(Element::new(ELEMENT_NAME, ELEMENT_KIND));
-        // assert
-        let element = diagram
-            .get_element_by_name(ELEMENT_NAME)
-            .expect("Expected element but got None");
-        assert_eq!(element.name, ELEMENT_NAME);
-    }
+        #[test]
+        fn display_empty_diagram() {
+            // arrange
+            let wanted = "requirementDiagram";
+            // act
+            let got = RequirementDiagram::new().to_string();
+            // assert
+            assert_eq!(got, wanted);
+        }
 
-    #[test]
-    fn add_requirement_to_existing_diagram() {
-        // arrange
-        let mut diagram = RequirementDiagram::new();
-        // act
-        diagram.add_requirement(Requirement::new(REQ_KIND, REQ_NAME, REQ_ID));
-        // assert
-        let requirement = diagram
-            .get_requirement_by_name(REQ_NAME)
-            .expect("Expected requirement but got None");
-        assert_eq!(requirement.name, REQ_NAME);
-    }
+        #[test]
+        fn display_diagram_with_element_and_requirement() {
+            // arrange
+            let wanted = concat!(
+                "requirementDiagram\n",
+                "    %% Elements start\n",
+                "    element foo {\n",
+                "        type: \"brief\"\n",
+                "    }\n",
+                "    %% Elements end\n",
+                "    %% Requirements start\n",
+                "    requirement milestone {\n",
+                "        id: 1.1.1\n",
+                "        risk: Low\n",
+                "    }\n",
+                "    %% Requirements end",
+            );
+            // act
+            let got = RequirementDiagram::new()
+                .with_element(Element::new(ELEMENT_NAME, ELEMENT_KIND))
+                .with_requirement(Requirement::new(REQ_KIND, REQ_NAME, REQ_ID).with_risk(Risk::Low))
+                .to_string();
+            // assert
+            assert_eq!(got, wanted, "\n\nGot:\n{got}\n\nWanted:\n{wanted}");
+        }
 
-    #[test]
-    fn create_diagram_with_requirement() {
-        // act
-        let diagram = RequirementDiagram::new()
-            .with_requirement(Requirement::new(REQ_KIND, REQ_NAME, REQ_ID));
-        // assert
-        let requirement = diagram
-            .get_requirement_by_name(REQ_NAME)
-            .expect("Expected requirement but got None");
-        assert_eq!(requirement.name, REQ_NAME);
-    }
-
-    #[test]
-    fn add_valid_relationship_to_existing_diagram() {
-        // arrange
-        let mut diagram = RequirementDiagram::new()
-            .with_element(Element::new(ELEMENT_NAME, ELEMENT_KIND))
-            .with_requirement(Requirement::new(REQ_KIND, REQ_NAME, REQ_ID));
-        // act
-        println!("{:?}", diagram.elements.keys());
-        diagram.add_relationship(Relationship::new(
-            ELEMENT_NAME,
-            REQ_NAME,
-            RelationshipType::Satisfies,
-        ));
-        // assert
-        assert_eq!(diagram.relationships.len(), 1);
-    }
-
-    #[test]
-    #[should_panic = "Fake isn't found in the list of elements or requirements"]
-    fn add_invalid_relationship_should_panic() {
-        // arrange
-        let mut diagram = RequirementDiagram::new();
-        // act
-        diagram.add_relationship(Relationship::new(
-            "Fake",
-            "bar",
-            RelationshipType::Satisfies,
-        ));
+        #[test]
+        fn display_diagram_with_all_components() {
+            // arrange
+            let wanted = concat!(
+                "requirementDiagram\n",
+                "    %% Elements start\n",
+                "    element foo {\n",
+                "        type: \"brief\"\n",
+                "    }\n",
+                "    %% Elements end\n",
+                "    %% Requirements start\n",
+                "    requirement milestone {\n",
+                "        id: 1.1.1\n",
+                "        risk: Low\n",
+                "    }\n",
+                "    %% Requirements end\n",
+                "    %% Relationships start\n",
+                "    foo - copies -> milestone\n",
+                "    %% Relationships end",
+            );
+            // act
+            let got = RequirementDiagram::new()
+                .with_element(Element::new(ELEMENT_NAME, ELEMENT_KIND))
+                .with_requirement(Requirement::new(REQ_KIND, REQ_NAME, REQ_ID).with_risk(Risk::Low))
+                .with_relationship(Relationship::new(
+                    ELEMENT_NAME,
+                    REQ_NAME,
+                    RelationshipType::Copies,
+                ))
+                .to_string();
+            // assert
+            assert_eq!(got, wanted, "\n\nGot:\n{got}\n\nWanted:\n{wanted}");
+        }
     }
 }
