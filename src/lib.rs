@@ -2,15 +2,19 @@
 #![warn(clippy::style)]
 #![warn(clippy::perf)]
 #![warn(clippy::cargo)]
+
 pub mod erd;
+pub mod req;
+mod utils;
 
 #[cfg(test)]
 mod tests {
     use crate::erd::{Attribute, Cardinality, Entity, Relationship, ERD};
+    use crate::req;
 
     #[test]
-    fn it_works() {
-        // create Entities with attributes and other details
+    fn create_erd() {
+        // create entities with attributes and other details
         let album_table = Entity::new("ALBUM")
             .with_alias("album")
             .with_attribute(Attribute::new("int", "albumId").as_primary_key())
@@ -53,6 +57,39 @@ mod tests {
             .with_entity(song_table)
             .with_relationship(album_songs)
             .with_relationship(album_artists);
+        println!("{diagram}");
+    }
+
+    #[test]
+    fn create_requirement_diagram() {
+        // create a constant value for verification method
+        const METHOD: req::VerifyMethod = req::VerifyMethod::Test;
+        // create elements and requirements
+        let search = req::Element::new("search", "release").with_docref("releases/0.1.1/search");
+        let requirements = vec![
+            req::Requirement::new(req::RequirementType::Functional, "feature_1", "1.1.1")
+                .with_risk(req::Risk::High)
+                .with_text("Test feature 1")
+                .with_verify_method(METHOD),
+            req::Requirement::new(req::RequirementType::Functional, "feature_2", "1.1.2")
+                .with_risk(req::Risk::Medium)
+                .with_text("Test feature 2")
+                .with_verify_method(METHOD),
+            req::Requirement::new(req::RequirementType::Performance, "speed", "1.1.3")
+                .with_risk(req::Risk::Low)
+                .with_text("Test performance")
+                .with_verify_method(METHOD),
+        ];
+        // create the diagram with the search element
+        let mut diagram = req::RequirementDiagram::new().with_element(search);
+        // add the requirements to the diagram and relate each to the search element
+        for req in requirements {
+            let relation =
+                req::Relationship::new("search", &req.name, req::RelationshipType::Satisfies);
+            diagram.add_requirement(req);
+            diagram.add_relationship(relation);
+        }
+        // export to mermaid syntax
         println!("{diagram}");
     }
 }
